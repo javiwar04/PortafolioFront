@@ -1,122 +1,126 @@
-"use client"
-
-import { Button } from "@/components/ui/button"
+"use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
-import { getPortfolioById, type Portfolio } from "@/lib/portfolio-storage"
-import { useRouter } from "next/navigation"
-import { ExternalLink } from "lucide-react"
+import { getProjects } from "@/lib/api"
 
-export default function ProyectosPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
-  const [portfolio, setPortfolio] = useState<Portfolio | null>(null)
+export default function ProyectosPage() {
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const data = getPortfolioById(params.id)
-    if (data) {
-      setPortfolio(data)
-    } else {
-      router.push("/")
-    }
-  }, [params.id, router])
-
-  if (!portfolio) {
-    return null
-  }
+    const fetchProjects = async () => {
+      try {
+        const data = await getProjects();
+        setProjects(data);
+      } catch (err: any) {
+        setError("No se pudieron cargar los proyectos");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl float-animation"></div>
-          <div
-            className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/5 rounded-full blur-3xl float-animation"
-            style={{ animationDelay: "2s" }}
-          ></div>
-        </div>
+      <div className="relative overflow-hidden">
+        <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl float-animation"></div>
+        <div
+          className="absolute bottom-20 left-10 w-96 h-96 bg-accent/5 rounded-full blur-3xl float-animation"
+          style={{ animationDelay: "3s" }}
+        ></div>
 
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6 text-balance">
-            Mi{" "}
-            <span className="text-primary bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Portafolio
-            </span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed text-pretty">
-            Explora una selección de mis proyectos más destacados
-          </p>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary to-accent mx-auto rounded-full"></div>
-        </div>
-      </section>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-foreground mb-4 text-balance">Mis Proyectos</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
+              Una colección de proyectos que demuestran mis habilidades en desarrollo web y móvil
+            </p>
+            <div className="w-24 h-1 bg-gradient-to-r from-primary to-accent mx-auto rounded-full mt-6"></div>
+          </div>
 
-      {/* Projects Grid */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          {portfolio.projects.length === 0 ? (
-            <Card className="text-center py-16 border-dashed border-2">
-              <CardHeader>
-                <CardTitle className="text-2xl">No hay proyectos aún</CardTitle>
-                <CardDescription className="text-lg">Los proyectos aparecerán aquí una vez agregados</CardDescription>
-              </CardHeader>
-            </Card>
+          {loading ? (
+            <div className="text-center text-lg text-muted-foreground">Cargando proyectos...</div>
+          ) : error ? (
+            <div className="text-center text-red-500">{error}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {portfolio.projects.map((project) => (
+              {projects.map((project: any) => (
                 <Card
                   key={project.id}
-                  className="group hover:shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:-translate-y-3 border-0 bg-card/90 backdrop-blur-sm overflow-hidden"
+                  className="group hover:shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:-translate-y-2 border-0 bg-card/90 backdrop-blur-sm overflow-hidden"
                 >
-                  {project.image && (
-                    <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                      <img
-                        src={project.image || "/placeholder.svg"}
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
-                  )}
+                  <div className="aspect-video overflow-hidden rounded-t-lg relative">
+                    <img
+                      src={project.imageUrl || "/placeholder.svg"}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
 
                   <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <CardTitle className="text-xl group-hover:text-primary transition-colors duration-300">
-                        {project.title}
-                      </CardTitle>
-                      {project.category && (
-                        <Badge variant="outline" className="text-xs">
-                          {project.category}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription className="text-base leading-relaxed">{project.description}</CardDescription>
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors duration-300">
+                      {project.title}
+                    </CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">{project.description}</CardDescription>
                   </CardHeader>
 
                   <CardContent>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {project.technologies.map((tech, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
+                      {(project.technologies || []).map((tech: any) => (
+                        <Badge
+                          key={tech}
+                          variant="secondary"
+                          className="text-xs hover:bg-primary/10 transition-colors duration-200"
+                        >
                           {tech}
                         </Badge>
                       ))}
                     </div>
 
-                    {project.link && (
-                      <Button asChild className="w-full group-hover:bg-primary/90 transition-colors duration-300">
-                        <a href={project.link} target="_blank" rel="noreferrer noopener">
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          Ver Proyecto
-                        </a>
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {project.projectUrl && (
+                        <Button
+                          asChild
+                          size="sm"
+                          className="flex-1 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                        >
+                          <a href={project.projectUrl} target="_blank" rel="noopener noreferrer">
+                            Ver Demo
+                          </a>
+                        </Button>
+                      )}
+                      {project.codeUrl && (
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 bg-transparent hover:bg-primary/5 hover:border-primary/50 transition-all duration-300"
+                        >
+                          <a href={project.codeUrl} target="_blank" rel="noopener noreferrer">
+                            Ver Código
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           )}
+
+          <div className="text-center mt-16">
+            <p className="text-muted-foreground mb-4 text-lg">¿Tienes una idea de proyecto? ¡Hablemos!</p>
+            <Button asChild size="lg" className="glow-effect">
+              <a href="/contacto">Iniciar Conversación →</a>
+            </Button>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
-  )
+  );
 }
